@@ -8,7 +8,7 @@ platforms: [linux, macos]
 metadata:
   hermes:
     tags: [council, deliberation, multi-agent, decision, strategy]
-    homepage: https://github.com/bobbyhansenjr/hermes-council
+    homepage: https://github.com/jrbobbyhansen-pixel/hermes-council
     triggers: ["/council", "/council --deep"]
 ---
 
@@ -402,4 +402,4 @@ The original council-of-high-intelligence was built for Claude Code's native sub
 - Persona reference files live in `references/personas/{name}.md` — 22 files, one per member
 - Each persona file contains: Identity, Grounding Protocol, and Output Format (both Standalone and Council Round 2)
 - The original Claude Code skill lives at `~/clawd/council-ref/` — these are adapted versions for Hermes
-- GitHub: https://github.com/bobbyhansenjr/hermes-council
+- GitHub: https://github.com/jrbobbyhansen-pixel/hermes-council

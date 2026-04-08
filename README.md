@@ -188,33 +188,12 @@ python3 skills/council/scripts/stream-council.py \
   --emit-format text
 ```
 
-### Public API
-`server.py` exposes the council as a zero-dependency HTTP API. POST a question, poll for the verdict.
-
-```bash
-python3 server.py --port 8742
-
-# Submit a question
-curl -X POST http://localhost:8742/council \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Should we open-source our agent framework?", "mode": "standard"}'
-
-# Poll for result  
-curl http://localhost:8742/council/{id}
-
-# List all members
-curl http://localhost:8742/members
-```
-
----
-
 ## File Structure
 
 ```
 hermes-council/
 ├── README.md
 ├── install.sh                          # Installs full skill to ~/.hermes/skills/council/
-├── server.py                           # Public HTTP API server (stdlib, no deps)
 ├── LICENSE
 └── skills/
     └── council/

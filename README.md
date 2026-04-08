@@ -156,7 +156,7 @@ hermes-council/
 ## Credits
 
 - Original Claude Code skill: [council-of-high-intelligence](https://github.com/0xNyk/council-of-high-intelligence) by [@0xNyk](https://github.com/0xNyk)
-- Hermes adaptation: [Bobby Hansen Jr.](https://github.com/bobbyhansenjr) + Rupert CLO
+- Hermes adaptation: [Bobby Hansen Jr.](https://github.com/jrbobbyhansen-pixel) ([@bobbyhansenjr](https://x.com/bobbyhansenjr)) + Rupert CLO
 
 ---
 

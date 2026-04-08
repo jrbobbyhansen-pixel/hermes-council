@@ -113,6 +113,39 @@ Never place these in the same triad when avoidable:
 If input contains `--deep` → run DEEP MODE (see below)
 Otherwise → run STANDARD MODE (this section)
 
+### STEP 0.5: Provider Detection & Routing
+
+Run provider detection:
+```bash
+bash ~/.hermes/skills/council/scripts/detect-providers.sh
+```
+
+Parse the JSON output:
+- `provider_count == 1` → single-provider mode, skip routing, use that provider for all members
+- `provider_count >= 2` → apply routing algorithm from `references/provider-routing.md`
+
+**Routing algorithm (multi-provider):**
+1. Load member→affinity map from `references/provider-routing.md`
+2. For every polarity pair where both members are selected: assign to DIFFERENT providers (hard constraint)
+3. Distribute remaining members evenly across available providers
+4. Use affinity map as tiebreaker
+5. High-tier members (aurelius, aristotle, socrates, lao-tzu, watts, sutskever, kahneman, taleb) → premium model slot
+6. Mid-tier (all others) → standard model slot
+
+**Emit routing table before proceeding** (always show this to the user):
+```
+Council Routing Table
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Member        Provider      Model
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[member]      [provider]    [model]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Polarity pairs separated: [pair] ✓/✗
+Provider spread: [N] providers, [M] members
+```
+
+**[CHECKPOINT]** Routing table confirmed before proceeding.
+
 ### STEP 1: Auto-Select 2 Complementary Triads
 
 1. Read the question carefully
@@ -141,10 +174,24 @@ Extract for each member:
 
 ### STEP 3: Round 1 — Independent Analysis (Parallel)
 
-Run 2 batches of 3 via `delegate_task` (parallel within batch, sequential between batches):
+**Two execution paths based on routing:**
 
-**Batch 1** (Triad 1 members — all 3 in parallel):
-Each member gets this prompt (with their persona identity embedded):
+**Path A — Multi-provider (2+ providers detected):**
+Use `council-call.py` via terminal for each member on their assigned provider:
+```bash
+python3 ~/.hermes/skills/council/scripts/council-call.py \
+  --provider [PROVIDER] \
+  --model [MODEL] \
+  --persona ~/.hermes/skills/council/references/personas/[NAME].md \
+  --question "[QUESTION]" \
+  --round 1 \
+  --member [NAME]
+```
+Run members in parallel batches of 3 via `delegate_task`. Each delegate runs the terminal command and returns the JSON output. Parse `analysis` field from each result.
+
+**Path B — Single provider (delegate_task with embedded persona):**
+Run 2 batches of 3 via `delegate_task` (parallel within batch):
+Each member gets this prompt with full persona embedded:
 ```
 You are [FIGURE] deliberating a hard question. Your identity and constraints:
 
@@ -158,11 +205,8 @@ Then produce your independent analysis using your Standalone Output Format.
 Max 350 words. Be direct.
 ```
 
-**Batch 2** (Triad 2 members — all 3 in parallel):
-Same prompt structure.
-
-Collect all 6 Round 1 outputs.
-**[CHECKPOINT]** Confirm 6 outputs collected.
+Collect all 6 Round 1 outputs. Note which provider/model each came from.
+**[CHECKPOINT]** Confirm 6 outputs collected. Log: `[R1 COMPLETE] {member} on {provider}/{model}: {word_count} words`
 
 ### STEP 4: Round 2 — Cross-Examination (Parallel within triad)
 
@@ -323,6 +367,15 @@ Full council verdict with:
 Deliver to Telegram when complete.
 
 ---
+
+## Adaptation Notes (Claude Code → Hermes)
+
+The original council-of-high-intelligence was built for Claude Code's native subagent system. Key differences when running in Hermes:
+
+- **delegate_task max 3 parallel**: Claude Code spawns N subagents freely; Hermes caps at 3 concurrent. Always batch in groups of 3, sequential between batches.
+- **No ~/.claude/agents/ reads**: Claude Code agents auto-read their own definition file. In Hermes, the full Identity + Grounding Protocol must be embedded directly in the delegate_task prompt — reference files don't get auto-injected.
+- **No /command system**: Hermes detects `/council` as a trigger phrase in user input; it's not a registered slash command. The skill coordinator protocol runs inline in the main conversation.
+- **Async delivery for --deep**: Claude Code can run long sessions interactively. Hermes --deep should respond immediately ("convening...") then deliver results to Telegram when done.
 
 ## Pitfalls
 

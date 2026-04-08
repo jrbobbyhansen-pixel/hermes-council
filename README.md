@@ -55,6 +55,10 @@ A single LLM gives you one reasoning path dressed up as confidence. The council 
 | munger | Charlie Munger | Multi-model reasoning | Invert — what guarantees failure? |
 | taleb | Nassim Taleb | Antifragility & tail risk | Design for the tail not the average |
 | rams | Dieter Rams | User-centered design | Less, but better |
+| jensen | Jensen Huang | Infrastructure & compute strategy | The GPU era changes everything |
+| bezos | Jeff Bezos | Customer obsession & long-term compounding | Day 1 or Day 2 — there is no middle |
+| graham | Paul Graham | Startup reality & what actually matters early | Do things that don't scale — then figure out what does |
+| diogenes | Diogenes | Radical simplicity & assumption auditing | What if none of this matters and you're overcomplicating it? |
 
 ---
 
@@ -104,6 +108,37 @@ A single LLM gives you one reasoning path dressed up as confidence. The council 
 | design | rams + torvalds + watts | User clarity + maintainability + reframing |
 | economics | munger + machiavelli + sun-tzu | Models + incentives + competition |
 | bias | kahneman + socrates + watts | Cognitive bias + assumption destruction + frame audit |
+
+---
+
+## Advanced Features
+
+### Web Research Per Member
+Before Round 1, each member runs a domain-specific web search via `research-brief.py`. Feynman pulls benchmarks. Sun Tzu pulls competitive landscape. Karpathy pulls recent ML papers. Their findings get injected into Round 1 — grounding analysis in real data rather than pure priors.
+
+### Memory Integration
+`inject-context.py` reads your project state (top-of-mind, session checkpoint, active project summaries) and injects it as context before deliberation. The council knows what you're building, your constraints, and your past decisions. They deliberate on your actual situation — not a hypothetical.
+
+### Verdict Tracking
+`council-tracker.py` stores every verdict in a local SQLite database. After a council run, record what you actually decided (`decide`). Later, record what happened (`outcome`). Over time, `stats` shows you which council members have historically been right — and by how much. The council gets smarter the more you use it.
+
+### Streaming Output
+`stream-council.py` runs the full deliberation and emits results to stdout as each member finishes each round. No waiting for all rounds to complete — see Round 1 analyses immediately, watch Round 2 unfold in real time. Supports `--emit text` (human-readable) and `--emit json` (pipeable).
+
+### Public API
+`server.py` exposes the council as an HTTP API. Others can POST a question and poll for the verdict. Runs standalone with no external dependencies.
+
+```bash
+python3 server.py --port 8742
+
+# POST a question
+curl -X POST http://localhost:8742/council \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Should we open-source our agent framework?", "mode": "standard"}'
+
+# Poll for result
+curl http://localhost:8742/council/{id}
+```
 
 ---
 

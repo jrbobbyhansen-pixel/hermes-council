@@ -25,6 +25,10 @@ Polarity pairs are flagged — they MUST be separated across providers when poss
 | munger | mid | openai | openrouter | aristotle |
 | taleb | high | anthropic | openrouter | karpathy |
 | rams | mid | openai | anthropic | ada |
+| jensen | mid | openai | openrouter | lao-tzu, watts |
+| bezos | high | anthropic | openrouter | torvalds, musashi |
+| graham | mid | openai | anthropic | aristotle, meadows |
+| diogenes | high | anthropic | openrouter | bezos, aristotle |
 
 ## Tier → Model Map
 

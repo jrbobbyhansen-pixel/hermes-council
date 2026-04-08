@@ -1,6 +1,6 @@
 ---
 name: council
-description: "Convene the Council of High Intelligence for multi-persona deliberation. /council runs 2 best triads with full 3-round deliberation + Rupert synthesis. /council --deep runs all 18 members in an extended multi-round fight, delivered async."
+description: "Convene the Council of High Intelligence for multi-persona deliberation. /council runs 2 best triads with full 3-round deliberation + Rupert synthesis. /council --deep runs all 22 members in an extended multi-round fight, delivered async."
 version: 1.0.0
 author: Bobby Hansen Jr. (bobbyhansenjr) + Rupert CLO
 license: CC0
@@ -14,7 +14,7 @@ metadata:
 
 # Council of High Intelligence — Hermes Skill
 
-A multi-persona deliberation system. 18 thinkers argue your hardest decisions across multiple rounds with structured disagreement, enforcement mechanisms, and verdict synthesis.
+A multi-persona deliberation system. 22 thinkers argue your hardest decisions across multiple rounds with structured disagreement, enforcement mechanisms, and verdict synthesis.
 
 Adapted from [council-of-high-intelligence](https://github.com/0xNyk/council-of-high-intelligence) for Hermes Agent.
 
@@ -33,13 +33,13 @@ Adapted from [council-of-high-intelligence](https://github.com/0xNyk/council-of-
 - Produces one verdict per triad + Rupert meta-synthesis
 
 **`/council --deep [question]`** — Extended deliberation
-- All 18 council members
+- All 22 council members
 - Extended multi-round deliberation with enforcement (dissent quota, novelty gate, counterfactual forcing)
 - Runs as a background task (~10 minutes), delivered to Telegram when complete
 
 ---
 
-## The 18 Council Members
+## The 22 Council Members
 
 | Name | Figure | Domain | Polarity |
 |------|--------|--------|----------|
@@ -61,6 +61,10 @@ Adapted from [council-of-high-intelligence](https://github.com/0xNyk/council-of-
 | munger | Charlie Munger | Multi-model reasoning | Invert — what guarantees failure? |
 | taleb | Nassim Taleb | Antifragility & tail risk | Design for the tail not the average |
 | rams | Dieter Rams | User-centered design | Less, but better |
+| jensen | Jensen Huang | Compute strategy & infrastructure | The GPU era changes everything |
+| bezos | Jeff Bezos | Customer obsession & long-term compounding | Day 1 or Day 2 — there is no middle |
+| graham | Paul Graham | Startup reality & what actually matters early | Do things that don't scale |
+| diogenes | Diogenes of Sinope | Radical simplicity & assumption auditing | What if none of this matters? |
 
 ---
 
@@ -88,6 +92,10 @@ Adapted from [council-of-high-intelligence](https://github.com/0xNyk/council-of-
 | design | rams + torvalds + watts | User clarity + maintainability + reframing |
 | economics | munger + machiavelli + sun-tzu | Models + incentives + competition |
 | bias | kahneman + socrates + watts | Cognitive bias + assumption destruction + frame audit |
+| customer | bezos + rams + machiavelli | Customer obsession + user design + incentive reality |
+| early-stage | graham + musashi + torvalds | Startup reality + strategic timing + ship it |
+| infrastructure | jensen + karpathy + ada | Compute strategy + ML intuition + formal systems |
+| simplicity | diogenes + lao-tzu + watts | Radical subtraction + emergence + reframing |
 
 ---
 
@@ -124,6 +132,8 @@ Parse the JSON output:
 - `provider_count == 1` → single-provider mode, skip routing, use that provider for all members
 - `provider_count >= 2` → apply routing algorithm from `references/provider-routing.md`
 
+**Supported providers:** anthropic, openai, openrouter, xai (grok-3 / grok-3-fast), gemini, ollama
+
 **Routing algorithm (multi-provider):**
 1. Load member→affinity map from `references/provider-routing.md`
 2. For every polarity pair where both members are selected: assign to DIFFERENT providers (hard constraint)
@@ -149,7 +159,7 @@ Provider spread: [N] providers, [M] members
 ### STEP 1: Auto-Select 2 Complementary Triads
 
 1. Read the question carefully
-2. Score all 20 triads against the question using keyword matching + semantic fit
+2. Score all 24 triads against the question using keyword matching + semantic fit
 3. Select the TOP triad (most directly relevant)
 4. Select the SECOND best triad that is COMPLEMENTARY — different domain, non-overlapping members
 5. State your selection and rationale before proceeding
@@ -300,19 +310,19 @@ Members: [name] + [name] + [name]
 
 ### Overview
 
-All 18 members. Extended rounds. Enforcement mechanisms. Background task.
+All 22 members. Extended rounds. Enforcement mechanisms. Background task.
 
-Immediately respond: "Deep council convened — 18 members, extended deliberation. I'll ping you when the verdict is ready (approx. 10 minutes)."
+Immediately respond: "Deep council convened — 22 members, extended deliberation. I'll ping you when the verdict is ready (approx. 10 minutes)."
 
 Then spawn as a background `delegate_task` with this full protocol:
 
 ### DEEP STEP 1: Auto-Select Domain Focus
 
-Identify the 3 most relevant triads for the question. These define the focal lenses, but ALL 18 members participate.
+Identify the 3 most relevant triads for the question. These define the focal lenses, but ALL 22 members participate.
 
 ### DEEP STEP 2: Problem Restate Gate
 
-Run all 18 members in 6 batches of 3:
+Run all 22 members in 8 batches of 3:
 ```
 You are [FIGURE]. In 2 sentences only:
 1. Restate this problem through your analytical lens.
@@ -320,7 +330,7 @@ You are [FIGURE]. In 2 sentences only:
 Question: [QUESTION]
 ```
 
-Review all 18 restatements. Flag if >3 members reframe the question significantly differently — this means the question itself may be the problem.
+Review all 22 restatements. Flag if >3 members reframe the question significantly differently — this means the question itself may be the problem.
 
 ### DEEP STEP 3: Round 1 — Independent Analysis
 
@@ -331,7 +341,7 @@ Review all 18 restatements. Flag if >3 members reframe the question significantl
 ### DEEP STEP 4: Round 2 — Full Cross-Examination
 
 6 batches of 3:
-- Each member sees ALL 18 Round 1 outputs
+- Each member sees ALL 22 Round 1 outputs
 - Must engage 3+ other members by name
 - 300 words max
 
@@ -349,7 +359,7 @@ Each member's strongest argument gets directly challenged by their polarity pair
 
 ### DEEP STEP 6: Round 4 — Final Positions
 
-All 18 members:
+All 22 members:
 - 100 words max
 - Crystallize final stance
 - Note any position changes from earlier rounds
@@ -389,7 +399,7 @@ The original council-of-high-intelligence was built for Claude Code's native sub
 
 ## Notes
 
-- Persona reference files live in `references/personas/{name}.md` — 18 files, one per member
+- Persona reference files live in `references/personas/{name}.md` — 22 files, one per member
 - Each persona file contains: Identity, Grounding Protocol, and Output Format (both Standalone and Council Round 2)
 - The original Claude Code skill lives at `~/clawd/council-ref/` — these are adapted versions for Hermes
 - GitHub: https://github.com/bobbyhansenjr/hermes-council

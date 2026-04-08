@@ -9,10 +9,39 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 import urllib.request
 import urllib.parse
 from html.parser import HTMLParser
+
+
+def load_dotenv(path):
+    path = os.path.expanduser(path)
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            k, v = line.split('=', 1)
+            k = k.strip()
+            v = v.strip().strip('"').strip("'")
+            if k and k not in os.environ:
+                os.environ[k] = v
+
+
+MEMBER_FIGURES = {
+    'feynman': 'Richard Feynman', 'socrates': 'Socrates', 'ada': 'Ada Lovelace',
+    'torvalds': 'Linus Torvalds', 'machiavelli': 'Machiavelli', 'watts': 'Alan Watts',
+    'aristotle': 'Aristotle', 'sun-tzu': 'Sun Tzu', 'aurelius': 'Marcus Aurelius',
+    'lao-tzu': 'Lao Tzu', 'musashi': 'Miyamoto Musashi', 'karpathy': 'Andrej Karpathy',
+    'sutskever': 'Ilya Sutskever', 'kahneman': 'Daniel Kahneman', 'meadows': 'Donella Meadows',
+    'munger': 'Charlie Munger', 'taleb': 'Nassim Taleb', 'rams': 'Dieter Rams',
+    'jensen': 'Jensen Huang', 'bezos': 'Jeff Bezos', 'graham': 'Paul Graham',
+    'diogenes': 'Diogenes',
+}
 
 
 # --- Domain-specific query modifiers per member ---
@@ -189,18 +218,82 @@ DEFAULT_BRIEF_TEMPLATE = (
 )
 
 
-def synthesize_brief(member: str, sources: list) -> str:
+def _template_brief(member: str, sources: list) -> str:
+    """Fallback: fill the static template from search result titles/snippets."""
     if not sources:
         return "No research sources were retrieved. Analysis will proceed from first principles."
-
     titles = [s["title"] for s in sources if s.get("title")]
     snippets = [s["snippet"] for s in sources if s.get("snippet")]
-
     key_themes = titles[0] if titles else "the queried topic"
     finding = snippets[0][:120].rstrip() + "..." if snippets else "mixed signals across sources"
-
     template = BRIEF_TEMPLATES.get(member.lower(), DEFAULT_BRIEF_TEMPLATE)
     return template.format(key_themes=key_themes, finding=finding)
+
+
+def synthesize_brief(member: str, domain: str, question: str, sources: list) -> str:
+    """Call LLM to generate a brief in the member's voice. Falls back to template on failure."""
+    figure_name = MEMBER_FIGURES.get(member.lower(), member.title())
+    formatted_sources = ""
+    for i, s in enumerate(sources, 1):
+        title = s.get("title", "")
+        snippet = s.get("snippet", "").strip()
+        formatted_sources += f"{i}. {title}\n   {snippet}\n\n"
+
+    if not formatted_sources:
+        formatted_sources = "No search results available."
+
+    prompt = (
+        f"You are {figure_name}. Based on these search results about \"{question}\", "
+        f"write a 2-3 sentence research brief in your voice that will ground your analysis. "
+        f"Focus on what is most relevant to your domain ({domain}). "
+        f"Be specific and cite what you found.\n\n"
+        f"Search results:\n{formatted_sources}\n"
+        f"Brief (2-3 sentences, in your analytical voice):"
+    )
+
+    try:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if api_key:
+            url = "https://api.anthropic.com/v1/messages"
+            headers = {
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            }
+            payload = {
+                "model": "claude-sonnet-4-5",
+                "max_tokens": 256,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+            req = urllib.request.Request(
+                url, data=json.dumps(payload).encode(), headers=headers
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read())
+                return data["content"][0]["text"].strip()
+
+        xai_key = os.environ.get("XAI_API_KEY")
+        if xai_key:
+            url = "https://api.x.ai/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {xai_key}",
+                "content-type": "application/json",
+            }
+            payload = {
+                "model": "grok-beta",
+                "max_tokens": 256,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+            req = urllib.request.Request(
+                url, data=json.dumps(payload).encode(), headers=headers
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read())
+                return data["choices"][0]["message"]["content"].strip()
+    except Exception:
+        pass
+
+    return _template_brief(member, sources)
 
 
 # --- Dry-run mock data ---
@@ -240,6 +333,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Return mock data without hitting the network")
     args = parser.parse_args()
 
+    load_dotenv('~/.hermes/.env')
+
     query = build_query(args.member, args.question, args.domain)
 
     if args.dry_run:
@@ -252,7 +347,7 @@ def main():
     except Exception:
         sources = []
 
-    brief = synthesize_brief(args.member, sources)
+    brief = synthesize_brief(args.member, args.domain, args.question, sources)
 
     result = {
         "member": args.member,

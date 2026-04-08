@@ -5,7 +5,12 @@
 #
 # Output: JSON with available providers, their models, and member assignments.
 
-set -e
+# Source credentials from ~/.hermes/.env if present
+if [ -f "$HOME/.hermes/.env" ]; then
+  set -a
+  source "$HOME/.hermes/.env"
+  set +a
+fi
 
 PROVIDERS=()
 PROVIDER_JSON=""
@@ -24,6 +29,14 @@ if [ -n "$OPENAI_API_KEY" ]; then
   OPENAI_MODELS='["gpt-4o","gpt-4o-mini"]'
 else
   OPENAI_MODELS="null"
+fi
+
+# --- Detect xAI (Grok) ---
+if [ -n "$XAI_API_KEY" ]; then
+  PROVIDERS+=("xai")
+  XAI_MODELS='["grok-3","grok-3-fast"]'
+else
+  XAI_MODELS="null"
 fi
 
 # --- Detect OpenRouter ---
@@ -70,6 +83,7 @@ cat <<EOF
   "models": {
     "anthropic": $ANTHROPIC_MODELS,
     "openai": $OPENAI_MODELS,
+    "xai": $XAI_MODELS,
     "openrouter": $OPENROUTER_MODELS,
     "gemini": $GEMINI_MODELS,
     "ollama": $OLLAMA_MODELS

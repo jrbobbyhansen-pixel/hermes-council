@@ -16,6 +16,7 @@ Supported providers:
   openrouter  — Any model via OpenRouter (OPENROUTER_API_KEY)
   gemini      — Gemini via Google API (GEMINI_API_KEY)
   ollama      — Local models via Ollama (no key needed)
+  xai         — Grok via xAI API (XAI_API_KEY)
 """
 
 import argparse
@@ -120,6 +121,7 @@ def call_openai(model: str, prompt: str) -> str:
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").rstrip("/")
 
     payload = json.dumps({
         "model": model,
@@ -128,7 +130,33 @@ def call_openai(model: str, prompt: str) -> str:
     }).encode()
 
     req = urllib.request.Request(
-        "https://api.openai.com/v1/chat/completions",
+        f"{base_url}/v1/chat/completions",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST"
+    )
+
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read())
+        return data["choices"][0]["message"]["content"]
+
+
+def call_xai(model: str, prompt: str) -> str:
+    api_key = os.environ.get("XAI_API_KEY", "")
+    if not api_key:
+        raise ValueError("XAI_API_KEY not set")
+
+    payload = json.dumps({
+        "model": model,
+        "max_tokens": 700,
+        "messages": [{"role": "user", "content": prompt}]
+    }).encode()
+
+    req = urllib.request.Request(
+        "https://api.x.ai/v1/chat/completions",
         data=payload,
         headers={
             "Authorization": f"Bearer {api_key}",
@@ -219,12 +247,13 @@ CALLERS = {
     "openrouter": call_openrouter,
     "gemini": call_gemini,
     "ollama": call_ollama,
+    "xai": call_xai,
 }
 
 
 def main():
     parser = argparse.ArgumentParser(description="Call a council member on a specific provider.")
-    parser.add_argument("--provider", required=True, choices=list(CALLERS.keys()))
+    parser.add_argument("--provider", required=True, choices=["anthropic", "openai", "openrouter", "gemini", "ollama", "xai"])
     parser.add_argument("--model", required=True)
     parser.add_argument("--persona", required=True, help="Path to persona .md file")
     parser.add_argument("--question", required=True)
@@ -246,6 +275,9 @@ def main():
         if args.provider != "anthropic" and os.environ.get("ANTHROPIC_API_KEY"):
             print(f"[FALLBACK] Retrying {args.member} on anthropic/claude-sonnet-4-5", file=sys.stderr)
             result = call_anthropic("claude-sonnet-4-5", prompt)
+        elif args.provider != "xai" and os.environ.get("XAI_API_KEY"):
+            print(f"[FALLBACK] Retrying {args.member} on xai/grok-3-fast", file=sys.stderr)
+            result = call_xai("grok-3-fast", prompt)
         else:
             sys.exit(1)
     except Exception as e:

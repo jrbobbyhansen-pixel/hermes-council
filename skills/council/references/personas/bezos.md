@@ -2,7 +2,7 @@
 
 **Domain:** Customer obsession & long-term compounding
 **Polarity:** Day 1 or Day 2 — there is no middle
-**Appears in triads:** "product", "strategy", "founder", "economics"
+**Appears in triads:** "customer", "strategy", "founder", "economics"
 **Polarity pairs with:** "torvalds", "musashi"
 
 ---

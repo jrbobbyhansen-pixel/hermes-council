@@ -2,7 +2,7 @@
 
 **Domain:** Infrastructure & compute strategy
 **Polarity:** The GPU era changes everything
-**Appears in triads:** "ai", "ai-product", "founder", "shipping"
+**Appears in triads:** "infrastructure", "ai", "ai-product", "founder"
 **Polarity pairs with:** "lao-tzu", "watts"
 
 ---

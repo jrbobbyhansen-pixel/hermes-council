@@ -8,7 +8,7 @@ Polarity pairs are flagged — they MUST be separated across providers when poss
 | Member | Tier | Primary Affinity | Secondary | Polarity Pair |
 |--------|------|-----------------|-----------|---------------|
 | aristotle | high | anthropic | openrouter | lao-tzu |
-| socrates | high | anthropic | openrouter | feynman |
+| socrates | high | xai | anthropic | feynman |
 | sun-tzu | mid | openai | openrouter | aurelius |
 | ada | mid | openai | anthropic | machiavelli, rams |
 | aurelius | high | anthropic | openrouter | sun-tzu |
@@ -17,18 +17,18 @@ Polarity pairs are flagged — they MUST be separated across providers when poss
 | feynman | mid | openai | anthropic | socrates, kahneman |
 | torvalds | mid | openai | anthropic | watts, musashi, meadows |
 | musashi | mid | openai | openrouter | torvalds |
-| watts | high | anthropic | openrouter | torvalds |
+| watts | high | xai | anthropic | torvalds |
 | karpathy | mid | openai | anthropic | sutskever, ada |
 | sutskever | high | anthropic | openrouter | karpathy |
 | kahneman | high | anthropic | openrouter | feynman |
 | meadows | mid | openai | anthropic | torvalds |
 | munger | mid | openai | openrouter | aristotle |
-| taleb | high | anthropic | openrouter | karpathy |
+| taleb | high | xai | anthropic | karpathy |
 | rams | mid | openai | anthropic | ada |
 | jensen | mid | openai | openrouter | lao-tzu, watts |
 | bezos | high | anthropic | openrouter | torvalds, musashi |
 | graham | mid | openai | anthropic | aristotle, meadows |
-| diogenes | high | anthropic | openrouter | bezos, aristotle |
+| diogenes | high | xai | anthropic | bezos, aristotle |
 
 ## Tier → Model Map
 
@@ -43,6 +43,10 @@ Polarity pairs are flagged — they MUST be separated across providers when poss
 ### openrouter
 - high → anthropic/claude-opus-4-5
 - mid  → openai/gpt-4o-mini
+
+### xai
+- high → grok-3
+- mid  → grok-3-fast
 
 ### gemini
 - high → gemini-1.5-pro

@@ -2,7 +2,7 @@
 
 **Domain:** Radical simplicity & assumption auditing
 **Polarity:** What if none of this matters and you are overcomplicating it?
-**Appears in triads:** "complexity", "bias", "ethics", "design"
+**Appears in triads:** "simplicity", "complexity", "bias", "ethics"
 **Polarity pairs with:** "bezos", "aristotle"
 
 ---

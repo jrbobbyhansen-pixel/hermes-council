@@ -45,8 +45,106 @@ import os
 import subprocess
 import sys
 import time
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+
+
+def load_dotenv(path):
+    path = os.path.expanduser(path)
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            k, v = line.split('=', 1)
+            k = k.strip()
+            v = v.strip().strip('"').strip("'")
+            if k and k not in os.environ:
+                os.environ[k] = v
+
+
+def synthesize_verdict(all_round_results, members, question):
+    """Call LLM to synthesize a final council verdict from all round outputs."""
+    final_results = all_round_results.get(3, [])
+    r1_results = all_round_results.get(1, [])
+    r2_results = all_round_results.get(2, [])
+
+    formatted_final_positions = ""
+    for r in final_results:
+        member = r.get("member", "unknown")
+        analysis = r.get("analysis", "").strip()
+        formatted_final_positions += f"\n[{member.upper()}]\n{analysis}\n"
+
+    key_earlier_points = ""
+    for r in r1_results:
+        member = r.get("member", "unknown")
+        analysis = r.get("analysis", "").strip()
+        # Take first 200 chars as key point
+        snippet = analysis[:200].rstrip() + ("..." if len(analysis) > 200 else "")
+        key_earlier_points += f"\nR1 [{member.upper()}]: {snippet}\n"
+    for r in r2_results:
+        member = r.get("member", "unknown")
+        analysis = r.get("analysis", "").strip()
+        snippet = analysis[:200].rstrip() + ("..." if len(analysis) > 200 else "")
+        key_earlier_points += f"\nR2 [{member.upper()}]: {snippet}\n"
+
+    prompt = (
+        f"You are synthesizing a council deliberation verdict.\n\n"
+        f"The question debated: {question}\n\n"
+        f"Final positions from all council members:\n{formatted_final_positions}\n"
+        f"Key points from earlier rounds:\n{key_earlier_points}\n"
+        f"Produce a structured synthesis:\n"
+        f"## What the Council Agreed On\n"
+        f"## The Core Tension (irreconcilable disagreement)\n"
+        f"## Minority Report (strongest dissenting view)\n"
+        f"## Recommended Action\n"
+        f"## What the Council Doesn't Know\n\n"
+        f"Be direct and concrete. 400 words max."
+    )
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if api_key:
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        }
+        payload = {
+            "model": "claude-sonnet-4-5",
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+        req = urllib.request.Request(
+            url, data=json.dumps(payload).encode(), headers=headers
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read())
+            return data["content"][0]["text"]
+
+    xai_key = os.environ.get("XAI_API_KEY")
+    if xai_key:
+        url = "https://api.x.ai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {xai_key}",
+            "content-type": "application/json",
+        }
+        payload = {
+            "model": "grok-beta",
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+        req = urllib.request.Request(
+            url, data=json.dumps(payload).encode(), headers=headers
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read())
+            return data["choices"][0]["message"]["content"]
+
+    return None
 
 # Path to council-call.py (same directory as this script)
 COUNCIL_CALL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "council-call.py")
@@ -243,6 +341,8 @@ def main():
     )
     args = parser.parse_args()
 
+    load_dotenv('~/.hermes/.env')
+
     members = [m.strip() for m in args.members.split(",") if m.strip()]
     triads = [t.strip() for t in args.triads.split(",") if t.strip()] if args.triads else []
 
@@ -346,6 +446,32 @@ def main():
                 for r in final_results
             ],
         })
+
+    # Synthesis step
+    synthesis = None
+    try:
+        synthesis = synthesize_verdict(all_round_results, members, args.question)
+    except Exception as e:
+        if emit_fmt == "text":
+            emit_text(f"\n  [SYNTHESIS ERROR] {e}")
+        else:
+            emit_json("synthesis_error", {"error": str(e)})
+
+    if synthesis:
+        if emit_fmt == "text":
+            emit_text(f"\n{'='*60}")
+            emit_text("  COUNCIL SYNTHESIS")
+            emit_text(f"{'='*60}")
+            for line in synthesis.strip().splitlines():
+                emit_text(f"  {line}")
+            emit_text(f"{'='*60}")
+        else:
+            emit_json("synthesis", {"verdict": synthesis})
+    else:
+        if emit_fmt == "text":
+            emit_text("\n  [SYNTHESIS] No API key available — skipping synthesized verdict.")
+        else:
+            emit_json("synthesis", {"verdict": None, "reason": "no API key available"})
 
     exit_code = 0 if len(final_results) == len(members) else 2
     sys.exit(exit_code)

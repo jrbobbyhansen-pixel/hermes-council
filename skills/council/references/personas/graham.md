@@ -2,7 +2,7 @@
 
 **Domain:** Startup reality & what actually matters early
 **Polarity:** Do things that don't scale — then figure out what does
-**Appears in triads:** "founder", "product", "shipping", "innovation"
+**Appears in triads:** "early-stage", "founder", "product", "shipping"
 **Polarity pairs with:** "aristotle", "meadows"
 
 ---

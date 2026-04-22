@@ -1,14 +1,33 @@
 # hermes-council
 
-**Council of High Intelligence — Hermes Agent Skill**
+**Council of High Intelligence — Multi-Agent Deliberation Skill**
 
 22 AI personas deliberate your hardest decisions in structured multi-round fights across multiple model providers. One command.
 
-Built for [Hermes Agent](https://github.com/hamelsmu/hermes). Adapted from [council-of-high-intelligence](https://github.com/0xNyk/council-of-high-intelligence) by [@0xNyk](https://github.com/0xNyk).
+Available for **[Claude Code](https://claude.ai/code)** and **[Hermes Agent](https://github.com/hamelsmu/hermes)**. Adapted from [council-of-high-intelligence](https://github.com/0xNyk/council-of-high-intelligence) by [@0xNyk](https://github.com/0xNyk).
 
 ---
 
 ## Quickstart
+
+### Claude Code
+
+```bash
+git clone https://github.com/jrbobbyhansen-pixel/hermes-council
+cd hermes-council
+./claude-code/install.sh
+```
+
+Then in any Claude Code session:
+
+```
+/council Should we open-source our agent framework?
+/council --deep What is the right architecture for our AI stack?
+```
+
+**Single-provider mode (Claude only):** The Claude Code version routes council members across `claude-opus-4-6` (dissenters: Socrates, Taleb, Watts, Diogenes) and `claude-sonnet-4-6` (builders). You get structured multi-angle deliberation through 22 different analytical frames — genuinely useful, just honestly described.
+
+### Hermes Agent
 
 ```bash
 git clone https://github.com/jrbobbyhansen-pixel/hermes-council
